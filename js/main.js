@@ -6,6 +6,7 @@ const ERROR_MESSAGE = {
     maNhanVien_empty: 'Mã nhân viên không được để trống',
     maNhanVien_length: 'Chiều dài mã nhân viên phải nằm trong khoảng 4 đến 6 kí tự',
     maNhanVien_numberic: 'Mã nhân viên chỉ chứa số và không có khoảng trắng',
+    maNhanVien_dupplicate: 'Mã nhân viên đã tồn tại trong hệ thống',
     hoTen_empty: 'Họ tên nhân viên không được bỏ trống',
     hoTen_alpha_space: 'Họ tên chỉ chấp nhận khoảng trắng và kí tự chữ',
     email: 'Email không hợp lệ',
@@ -22,7 +23,8 @@ const ERROR_MESSAGE = {
     gioLam_range: 'Số giờ làm trong tháng phải nằm trong khoản 80 đến 200 giờ'
 }
 const COMMON_MESSAGE = {
-    success: 'Thành công'
+    success: 'Thành công',
+    valid: 'Hợp lệ'
 }
 /* function
 -------------------------------------------------- */
@@ -36,7 +38,7 @@ function printListNhanVien(lstNhanVien, htmlElement = '#tableDanhSach') {
     htmlEle.innerHTML = ''
     var htmlText = ''
     lstNhanVien.forEach(nv => {
-        htmlText += '<tr><td>' + nv.account + '</td><td>' + nv.hoTen + '</td><td>' + nv.email + '</td><td>' + nv.ngayLam + '</td><td> ' + nv.chucVu + ' </td><td>' + nv.tongLuong.toLocaleString() + '</td><td>' + nv.loaiNhanVien + '</td><td><Button class="btn btn-danger" onclick="deleteNhanVien(' + nv.account + ')">Xoá</Button></td></tr>'
+        htmlText += '<tr><td>' + nv.account + '</td><td>' + nv.hoTen + '</td><td>' + nv.email + '</td><td>' + nv.ngayLam + '</td><td> ' + nv.chucVu + ' </td><td>' + nv.tongLuong.toLocaleString() + '</td><td>' + nv.loaiNhanVien + '</td><td><Button class="btn btn-danger" onclick="deleteNhanVien(' + nv.account + ')">Xoá</Button> <Button class="btn btn-success" onclick="showDetailNhanVien(' + nv.account + ')">Chi tiết</Button></td></tr>'
     });
     htmlEle.innerHTML = htmlText
 }
@@ -91,18 +93,120 @@ function hideErrorMessageFromAddOrUpdateNhanVienPopup() {
     hidenHtmlElement(idTbSoGioLam)
 }
 /**
+ * validation mã nhân viên: kiểm tra tính hợp lệ của mã nhân viên. phải từ 4-6 kí số và không bỏ trống
+ * @maNhanVien {string}: mã nhân viên
+ * @isCheckDuplicate {boolean}: true thì kiểm tra xem mã nhân viên có tồn tại hay chưa, false thì sẽ không kiểm tra
+ * @return {array} : mảng chứa hai giá trị nếu, giá trị đầu mang giá trị true nếu maNhanVien là hợp lệ, mang giá trị false nếu maNhanVien không hợp lệ. giá trị thứ hai trong mảng kết quả là thông báo 
+ */
+function validNhanVien_maNhanVien(maNhanVien, isAdd = false) {
+    if (!maNhanVien) {
+        return [false, ERROR_MESSAGE.maNhanVien_empty]
+    }
+    var accValid2 = VALIDATOR.rangeLength(maNhanVien, 4, 6)
+    if (!accValid2) {
+        return [false, ERROR_MESSAGE.maNhanVien_length]
+    }
+    var accValid3 = VALIDATOR.isNumeric(maNhanVien)
+    if (!accValid3) {
+        return [false, ERROR_MESSAGE.maNhanVien_numberic]
+    }
+    if (isAdd) {
+        var accValid4 = LSTNHANVIEN.search(maNhanVien)
+        if (accValid4 != undefined) {
+            return [false, ERROR_MESSAGE.maNhanVien_dupplicate]
+        }
+    }
+    return [true, COMMON_MESSAGE.valid]
+}
+/**
+ * validation tên nhân viên: kiểm tra tính hợp lệ của tên nhân viên. phải là chữ và không để trống
+ * @hoTen {string}: họ tên nhân viên
+ * @return {array} : mảng chứa hai giá trị nếu, giá trị đầu mang giá trị true nếu họ tên nhân viên là hợp lệ, mang giá trị false nếu họ tên nhân viên không hợp lệ. giá trị thứ hai trong mảng kết quả là thông báo
+ */
+function validNhanVien_hoTenNhanVien(hoTen) {
+    var isNameEmpty = VALIDATOR.isEmptyString(hoTen)
+    if (!isNameEmpty[1]) {
+        return [false, ERROR_MESSAGE.hoTen_empty]
+    }
+    var isAlpha = VALIDATOR.isAllAlphabetsOrWhiteSpace(isNameEmpty[0])
+    if (!isAlpha) {
+        return [false, ERROR_MESSAGE.hoTen_alpha_space]
+    }
+    return [true, COMMON_MESSAGE.valid]
+}
+/**
+ * validation mật khẩu: kiểm tra tính hợp lệ của mật khẩu. mật khẩu phải từ 6-10 kí tự, chứa ít nhất một chữa số, 1 chứ in, 1 kí tự đặc biệt và không được để trống
+ * @matKhau {string}: mật khẩu cần kiểm tra
+ * @return {array} : mảng chứa hai giá trị nếu, giá trị đầu mang giá trị true nếu mật khẩu là hợp lệ, mang giá trị false nếu mật khẩu không hợp lệ. giá trị thứ hai trong mảng là thông báo kết quả
+ */
+function validNhanVien_matKhau(matKhau) {
+    if (!matKhau) {
+        return [false, ERROR_MESSAGE.matKhau_empty]
+    }
+    var isPassValid1 = VALIDATOR.rangeLength(matKhau, 6, 10)
+    if (!isPassValid1) {
+        return [false, ERROR_MESSAGE.matKhau_length]
+    }
+    var isPassValid2 = VALIDATOR.isStrongPassword(matKhau)
+    if (!isPassValid2) {
+        return [false, ERROR_MESSAGE.matKhau_strong]
+    }
+    return [true, COMMON_MESSAGE.valid]
+}
+/**
+ *  validation lương cơ bản: kiểm tra tính hợp lệ của lương cơ bản. lương cơ bản phải từ 1 000 000 - 20 000 000 và không được để trống
+ * @luongCoBan {string}: lương cơ bản
+ * @return {array} : mảng chứa hai giá trị nếu, giá trị đầu mang giá trị true nếu lương cơ bản là hợp lệ, mang giá trị false nếu lương cơ bản không hợp lệ. giá trị thứ hai trong mảng là thông báo kết quả
+ */
+function validNhanVien_luongCoBan(luongCoBan) {
+    if (!luongCoBan) {
+        return [false, ERROR_MESSAGE.luongCoBan_empty]
+    }
+    var isLuongCoBan1 = VALIDATOR.isNumeric(luongCoBan)
+    if (!isLuongCoBan1) {
+        return [false, ERROR_MESSAGE.luongCoBan_numberic]
+    }
+    var luongCoBanNumber = Number(luongCoBan)
+    var isLuongCoBan2 = VALIDATOR.rangeNumber(luongCoBanNumber, 1000000, 20000000)
+    if (!isLuongCoBan2) {
+        return [false, ERROR_MESSAGE.luongCoBan_rangedValue]
+    }
+    return [true, COMMON_MESSAGE.valid]
+}
+/**
+ * kiểm tra tính hợp lệ của số giờ làm số giờ làm phải tử 80-200 và không được bỏ trống
+ * @soGioLam {string}: số giờ làm
+ * @return {[boolean, notify]}: boolean xem có hợp lệ hay không, notify là thông báo trả về
+ */
+function validNhanVien_soGioLam(soGioLam) {
+    if (!soGioLam) {
+        return [false, ERROR_MESSAGE.gioLam_empty]
+    }
+    var gioLamValid = VALIDATOR.isNumeric(soGioLam)
+    if (!gioLamValid) {
+        return [false, ERROR_MESSAGE.gioLam_numberic]
+    }
+    var gioLamValid2 = VALIDATOR.rangeNumber(Number(soGioLam), 80, 200)
+    if (!gioLamValid2) {
+        return [false, ERROR_MESSAGE.gioLam_range]
+    }
+    return [true, COMMON_MESSAGE.valid]
+}
+/**
  * validation nhân viên: kiểm tra thông tin nếu có một trường dữ liệu không hợp lệ thì sẽ xuất thông báo vả trả về false
  * @maNhanVien {string}: chuỗi cần kiểm tra có phải là mã nhân viên hay không
  * @hoTen {string}: chuỗi cần kiểm tra có phải là họ tên của nhân viên hay không
  * @email {string}: kiểm tra email có hợp lệ hay không
  * @matKhau {string}: kiểm tra mật khẩu có hợp lệ hay không
- * @ngayLam {string}: kiểm tra ngày làm có hợp lệ hay không
+ * @ngayLamViec {string}: kiểm tra ngày làm có hợp lệ hay không
  * @luongCoBan {string}: kiểm tra lương cơ bản có hợp lệ hay không
  * @chucVu {string}: kiểm tra chức vụ có hợp lệ hay không
- * @gioLamTrongThang {string}: kiểm tra giờ làm có hợp lệ hay không
+ * @soGioLam {string}: kiểm tra giờ làm có hợp lệ hay không
+ * @isAdd {boolean}: nếu là true thì kiểm tra xem maNhanVien có trùng lặp không, giá trị mặc định là false 
  * @return {boolean} nếu có một trường bị sai thì trả về false ngược lại trả về true
  */
-function validNhanVien(maNhanVien, hoTen, email, matKhau, ngayLamViec, luongCoBan, chucVu, soGioLam) {
+function validNhanVien(maNhanVien, hoTen, email, matKhau, ngayLamViec, luongCoBan, chucVu, soGioLam, isAdd = false) {
+    var isEveryThingOk = true;
     // var biến
     const idTbTKNV = '#tbTKNV'
     const idTbTen = '#tbTen'
@@ -115,95 +219,54 @@ function validNhanVien(maNhanVien, hoTen, email, matKhau, ngayLamViec, luongCoBa
     // hiden all thông báo lỗi
     hideErrorMessageFromAddOrUpdateNhanVienPopup()
     // mã nhân viên
-    if (!maNhanVien) {
-        showErrorMessage(ERROR_MESSAGE.maNhanVien_empty, idTbTKNV)
-        return false
-    }
-    var accValid2 = VALIDATOR.rangeLength(maNhanVien, 4, 6)
-    if (!accValid2) {
-        showErrorMessage(ERROR_MESSAGE.maNhanVien_length, idTbTKNV)
-        return false
-    }
-    var accValid3 = VALIDATOR.isNumeric(maNhanVien)
-    if (!accValid3) {
-        showErrorMessage(ERROR_MESSAGE.maNhanVien_numberic, idTbTKNV)
-        return
+    var temp = validNhanVien_maNhanVien(maNhanVien, isAdd)
+    if (!temp[0]) {
+        isEveryThingOk &= temp[0]
+        showErrorMessage(temp[1], idTbTKNV)
     }
     // tên nhân viên
-    var isNameEmpty = VALIDATOR.isEmptyString(hoTen)
-    if (!isNameEmpty[1]) {
-        showErrorMessage(ERROR_MESSAGE.hoTen_empty, idTbTen)
-        return false
-    }
-    var isAlpha = VALIDATOR.isAllAlphabetsOrWhiteSpace(isNameEmpty[0])
-    if (!isAlpha) {
-        showErrorMessage(ERROR_MESSAGE.hoTen_alpha_space, idTbTen)
-        return false
+    temp = validNhanVien_hoTenNhanVien(hoTen)
+    if (!temp[0]) {
+        isEveryThingOk &= temp[0]
+        showErrorMessage(temp[1], idTbTen)
     }
     // email
     var isEmail = VALIDATOR.isEmail(email)
     if (!isEmail) {
+        isEveryThingOk &= false
         showErrorMessage(ERROR_MESSAGE.email, idTbEmail)
-        return false
     }
     // mật khẩu
-    if (!matKhau) {
-        showErrorMessage(ERROR_MESSAGE.matKhau_empty, idTbMatKhau)
-        return
-    }
-    var isPassValid1 = VALIDATOR.rangeLength(matKhau, 6, 10)
-    if (!isPassValid1) {
-        showErrorMessage(ERROR_MESSAGE.matKhau_length, idTbMatKhau)
-        return false
-    }
-    var isPassValid2 = VALIDATOR.isStrongPassword(matKhau)
-    if (!isPassValid2) {
-        showErrorMessage(ERROR_MESSAGE.matKhau_strong, idTbMatKhau)
-        return false
+    temp = validNhanVien_matKhau(matKhau)
+    if (!temp[0]) {
+        isEveryThingOk &= temp[0]
+        showErrorMessage(temp[1], idTbMatKhau)
     }
     // ngày làm việc
     var isDateValid = VALIDATOR.isStringDateInvalid(ngayLamViec)
     if (!isDateValid) {
+        isEveryThingOk &= false
         showErrorMessage(ERROR_MESSAGE.ngayLamViec, idTbNgay)
-        return false
     }
     // lương cơ bản
-    if (!luongCoBan) {
-        showErrorMessage(ERROR_MESSAGE.luongCoBan_empty, idLuongCoBan)
-        return false
-    }
-    var isLuongCoBan1 = VALIDATOR.isNumeric(luongCoBan)
-    if (!isLuongCoBan1) {
-        showErrorMessage(ERROR_MESSAGE.luongCoBan_numberic, idLuongCoBan)
-    }
-    var luongCoBanNumber = Number(luongCoBan)
-    var isLuongCoBan2 = VALIDATOR.rangeNumber(luongCoBanNumber, 1000000, 20000000)
-    if (!isLuongCoBan2) {
-        showErrorMessage(ERROR_MESSAGE.luongCoBan_rangedValue, idLuongCoBan)
-        return false
+    temp = validNhanVien_luongCoBan(luongCoBan)
+    if (!temp[0]) {
+        isEveryThingOk &= temp[0]
+        showErrorMessage(temp[1], idLuongCoBan)
     }
     // chức vụ
     if (chucVu != CHUC_VU.GD && chucVu != CHUC_VU.TP && chucVu != CHUC_VU.NV) {
+        isEveryThingOk &= false
         showErrorMessage(ERROR_MESSAGE.chucVu, idTbChucVu)
-        return false
     }
     //số giờ làm
-    if (!soGioLam) {
-        showErrorMessage(ERROR_MESSAGE.gioLam_empty, idTbSoGioLam)
-        return false
-    }
-    var gioLamValid = VALIDATOR.isNumeric(soGioLam)
-    if (!gioLamValid) {
-        showErrorMessage(ERROR_MESSAGE.gioLam_numberic)
-        return false
-    }
-    var gioLamValid2 = VALIDATOR.rangeNumber(Number(soGioLam), 80, 200)
-    if (!gioLamValid2) {
-        showErrorMessage(ERROR_MESSAGE.gioLam_range, idTbSoGioLam)
-        return false
+    temp = validNhanVien_soGioLam(soGioLam)
+    if (!temp[0]) {
+        isEveryThingOk &= temp[0]
+        showErrorMessage(temp[1], idTbSoGioLam)
     }
     // thông tin hợp lệ
-    return true
+    return isEveryThingOk;
 }
 /**
  * xoá nhân viên khỏi mảng: hàm thực hiện xoá nhân viên theo mã nhân viên, nếu trong mảng có nhiều nhân viên trùng max (account) thì hàm sẽ xoá hết các nhân viên đó
@@ -212,6 +275,28 @@ function validNhanVien(maNhanVien, hoTen, email, matKhau, ngayLamViec, luongCoBa
 function deleteNhanVien(account) {
     LSTNHANVIEN.remove(account)
     printListNhanVien(LSTNHANVIEN.lstNhanVien)
+}
+/**
+ * hiển thị chi tiết sinh viên: mở model sinh viên điền thông tin sinh viên lên các trường trong model
+ * @account {string}: mã nhân viên cần hiển thị
+ */
+function showDetailNhanVien(account) {
+    //tìm kiếm nhân viên
+    var nv = LSTNHANVIEN.search(account)
+    if (nv == undefined) {
+        return;
+    }
+    // show model thêm / cập nhật thông tin nhân viên
+    $('#myModal').modal('toggle')
+    //load dữ liệu lên model
+    querySelector('#tknv').value = nv.account
+    querySelector('#name').value = nv.hoTen
+    querySelector('#email').value = nv.email
+    querySelector('#password').value = nv.matKhau
+    querySelector('#datepicker').value = nv.ngayLam
+    querySelector('#luongCB').value = nv.luongCoBan
+    querySelector('#chucvu').value = nv.chucVu
+    querySelector('#gioLam').value = nv.gioLamTrongThang
 }
 /* event
 -------------------------------------------------- */
@@ -228,7 +313,7 @@ querySelector('#btnThemNV').onclick = function () {
     var luongCoBan = querySelector('#luongCB').value
     var chucVu = querySelector('#chucvu').value
     var gioLam = querySelector('#gioLam').value
-    var isNhanVienValid = validNhanVien(maNhanVien, hoTen, email, matKhau, ngayLam, luongCoBan, chucVu, gioLam)
+    var isNhanVienValid = validNhanVien(maNhanVien, hoTen, email, matKhau, ngayLam, luongCoBan, chucVu, gioLam, true)
     if (!isNhanVienValid) {
         return
     }

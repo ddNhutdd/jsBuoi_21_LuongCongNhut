@@ -75,4 +75,14 @@ function ListNhanVien() {
             return result
         }
     }
+    /**
+     * tìm kiếm nhân viên: tìm nhân viên theo mã nhân viên
+     * @account {string},: mã nhân viên
+     * @result {NhanVien}: trả về nhân viên tìm thấy, nếu không tìm thấy trả về undefined
+     */
+    this.search = function (account) {
+        var result = this.lstNhanVien.filter(n => n.account == account)
+        if (result.length <= 0) return undefined;
+        return result[0]
+    }
 }
