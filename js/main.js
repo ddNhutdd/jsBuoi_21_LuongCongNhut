@@ -26,6 +26,10 @@ const COMMON_MESSAGE = {
     success: 'Thành công',
     valid: 'Hợp lệ'
 }
+const DAILOG = {
+    title_add: "Add",
+    title_update: "Update"
+}
 /* function
 -------------------------------------------------- */
 /**
@@ -281,6 +285,7 @@ function deleteNhanVien(account) {
  * @account {string}: mã nhân viên cần hiển thị
  */
 function showDetailNhanVien(account) {
+    editDailog(DAILOG.title_update, true)
     //tìm kiếm nhân viên
     var nv = LSTNHANVIEN.search(account)
     if (nv == undefined) {
@@ -297,6 +302,27 @@ function showDetailNhanVien(account) {
     querySelector('#luongCB').value = nv.luongCoBan
     querySelector('#chucvu').value = nv.chucVu
     querySelector('#gioLam').value = nv.gioLamTrongThang
+}
+/**
+ * chỉnh sử thông tin dailog: nếu thêm thì hiển thị title là add, nếu update thì hiển thị title là update, và disable input id
+ * @title {string}: tiêu đề của dialog
+ * @disableId {boolean}: disable input id hay không
+ * @return {null} hàm không có giá trị trả về
+ */
+function editDailog(title = DAILOG.title_add, disableId = false) {
+    var titleEle = querySelector('#header-title')
+    titleEle.innerHTML = title;
+    var tknvEle = querySelector('#tknv')
+    tknvEle.disabled = disableId
+    if (title === DAILOG.title_add) {
+        hidenHtmlElement('#btnCapNhat')
+        querySelector('#btnThemNV').classList.add('d-block')
+        return
+    }
+    if (title === DAILOG.title_update) {
+        hidenHtmlElement('#btnThemNV')
+        querySelector('#btnCapNhat').classList.add('d-block')
+    }
 }
 /* event
 -------------------------------------------------- */
@@ -363,4 +389,11 @@ querySelector('#btnTimNV').onclick = function () {
     var result = LSTNHANVIEN.filter(con)
     // show kết quả
     printListNhanVien(result)
+}
+/**
+ * sự kiện hiển thị dailog khi người dùng click vào nút thêm
+ */
+querySelector('#btnThem').onclick = function () {
+    editDailog();
+    querySelector('#formNV').reset();
 }
