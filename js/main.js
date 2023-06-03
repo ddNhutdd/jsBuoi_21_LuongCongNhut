@@ -285,6 +285,7 @@ function deleteNhanVien(account) {
  * @account {string}: mã nhân viên cần hiển thị
  */
 function showDetailNhanVien(account) {
+    hideErrorMessageFromAddOrUpdateNhanVienPopup()
     editDailog(DAILOG.title_update, true)
     //tìm kiếm nhân viên
     var nv = LSTNHANVIEN.search(account)
@@ -353,11 +354,13 @@ querySelector('#btnThemNV').onclick = function () {
     // xuất thông báo ra màn hình
     alert(COMMON_MESSAGE.success)
     hideErrorMessageFromAddOrUpdateNhanVienPopup()
+    querySelector('#formNV').reset();
 }
 /**
  * sự kiện update thông tin nhân viên, update all nhân viên có cùng mã nhân viên (account) trong mảng
  */
 querySelector('#btnCapNhat').onclick = function () {
+    hideErrorMessageFromAddOrUpdateNhanVienPopup()
     // validation
     var maNhanVien = querySelector('#tknv').value
     var hoTen = querySelector('#name').value
@@ -396,4 +399,5 @@ querySelector('#btnTimNV').onclick = function () {
 querySelector('#btnThem').onclick = function () {
     editDailog();
     querySelector('#formNV').reset();
+    hideErrorMessageFromAddOrUpdateNhanVienPopup()
 }
